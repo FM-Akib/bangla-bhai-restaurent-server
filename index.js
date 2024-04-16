@@ -30,6 +30,7 @@ async function run() {
 
     const menuCollection = client.db('BanglaBhaiDB').collection("menu");
     const reviewCollection = client.db('BanglaBhaiDB').collection("reviews");
+    const cartCollection = client.db('BanglaBhaiDB').collection("carts");
 
     app.get('/menu',async(req,res) => {
         const result = await menuCollection.find().toArray();
@@ -40,6 +41,27 @@ async function run() {
         const result = await reviewCollection.find().toArray();
         res.send(result);
     })
+
+
+    //cart 
+
+    app.get('/carts',async(req,res) => {
+      const email = req.query.email;
+      const query= {email: email};
+      const result = await cartCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    app.post('/carts',async(req,res)=>{
+      const cartItem = req.body; 
+      const result= await cartCollection.insertOne(cartItem);
+      res.send(result);
+    })
+
+
+
+
+    
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
