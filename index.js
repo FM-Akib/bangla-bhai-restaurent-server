@@ -31,12 +31,38 @@ async function run() {
     const menuCollection = client.db('BanglaBhaiDB').collection("menu");
     const reviewCollection = client.db('BanglaBhaiDB').collection("reviews");
     const cartCollection = client.db('BanglaBhaiDB').collection("carts");
+    const usersCollection = client.db('BanglaBhaiDB').collection("users");
 
+
+
+
+  //users
+   app.get('/users',async(req, res)=>{
+    const result = await usersCollection.find().toArray();
+    res.send(result);
+   })
+ 
+   app.post('/users',async(req, res)=>{
+    const user = req.body;
+
+    const query = {email: user.email}
+    const exist = await usersCollection.findOne(query);
+    if(exist){
+      return res.send({message:'user already exists',insertId: null})
+    }
+
+    const result = await usersCollection.insertOne(user);
+    res.send(result);
+   })
+
+    //menu
     app.get('/menu',async(req,res) => {
         const result = await menuCollection.find().toArray();
         res.send(result);
     })
 
+
+    //review
     app.get('/reviews',async(req,res) => {
         const result = await reviewCollection.find().toArray();
         res.send(result);
