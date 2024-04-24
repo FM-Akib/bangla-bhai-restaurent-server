@@ -44,16 +44,23 @@ async function run() {
  
    app.post('/users',async(req, res)=>{
     const user = req.body;
-
     const query = {email: user.email}
     const exist = await usersCollection.findOne(query);
     if(exist){
       return res.send({message:'user already exists',insertId: null})
     }
-
     const result = await usersCollection.insertOne(user);
     res.send(result);
    })
+
+   app.delete('/users/:id', async(req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id)}
+    const result = await usersCollection.deleteOne(query);
+    res.send(result); 
+  })
+
+
 
     //menu
     app.get('/menu',async(req,res) => {
