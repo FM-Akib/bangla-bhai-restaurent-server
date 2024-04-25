@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 require('dotenv').config()
 const port = process.env.PORT || 5000;
+var jwt = require('jsonwebtoken');
 
 
 //middleware
@@ -35,9 +36,30 @@ async function run() {
 
 
 
+    // jwt related Apis
+
+
+    app.post('/jwt',async(req, res)=>{
+      const user = req.body;
+      const token = jwt.sign({user},process.env.ACCESS_TOKEN,{ expiresIn: '1h' })
+      res.send({token}); 
+    })
+
+    // middleware
+    const verifyToken = (req,res,next)=>{
+      if(!req.headers.authorization){
+        return res.status(401).send({message:'forbidden access'})
+      }
+      const token= req.headers.authorization.split(' ')[1]
+      jwt.verify(token,process.env.ACCESS_TOKEN,function(err,decoded){
+        if(err){return res.status(401).send({message:'forbidden access'})}
+        req.decoded = decoded;
+        next();
+      })
+    }
 
   //users
-   app.get('/users',async(req, res)=>{
+   app.get('/users',verifyToken,async(req, res)=>{
     const result = await usersCollection.find().toArray();
     res.send(result);
    })
