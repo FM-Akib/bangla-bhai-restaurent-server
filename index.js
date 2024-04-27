@@ -58,8 +58,32 @@ async function run() {
       })
     }
 
+    const verifyAdmin = async(req, res, next)=>{
+      const email = req.decoded.email;
+      const query ={email: email}
+      const user = await usersCollection.findOne(query)
+      const isAdmin = user?.role==='admin'
+      if(!isAdmin){res.status(403).send({message:'unauthorized access'})}
+      next();
+    }
+
+    // check user admin or not?
+    app.get('users/admin/:email',verifyToken,async(req, res)=>{
+      const email = req.params.email;
+      if(email!== req.decoded.email){
+        res.status(403).send({message:'unauthorized access'})
+      }
+      const query = {email: email}
+      const user = await usersCollection.findOne(query)
+      let admin = false;
+      if(user){
+        admin  = user?.role==='admin'
+      }
+      res.send({admin})
+    })
+
   //users
-   app.get('/users',verifyToken,async(req, res)=>{
+   app.get('/users',verifyToken,verifyAdmin,async(req, res)=>{
     const result = await usersCollection.find().toArray();
     res.send(result);
    })
@@ -75,14 +99,14 @@ async function run() {
     res.send(result);
    })
 
-   app.delete('/users/:id', async(req, res) => {
+   app.delete('/users/:id',verifyToken,verifyAdmin, async(req, res) => {
     const id = req.params.id;
     const query = { _id: new ObjectId(id)}
     const result = await usersCollection.deleteOne(query);
     res.send(result); 
   })
 
-  app.patch('/users/admin/:id', async(req, res) => {
+  app.patch('/users/admin/:id',verifyToken,verifyAdmin, async(req, res) => {
     const id = req.params.id;
     const filter = { _id: new ObjectId(id)}
     const updatedDoc = {
