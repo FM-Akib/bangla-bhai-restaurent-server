@@ -68,8 +68,10 @@ async function run() {
     }
 
     // check user admin or not?
-    app.get('users/admin/:email',verifyToken,async(req, res)=>{
+    app.get('/users/isadmin/:email',verifyToken,async(req, res)=>{
       const email = req.params.email;
+      // console.log(email);
+
       if(email!== req.decoded.email){
         res.status(403).send({message:'unauthorized access'})
       }
@@ -77,8 +79,10 @@ async function run() {
       const user = await usersCollection.findOne(query)
       let admin = false;
       if(user){
-        admin  = user?.role==='admin'
+        admin  = user?.role==="admin"
       }
+      console.log(admin);
+      
       res.send({admin})
     })
 
