@@ -58,33 +58,76 @@ async function run() {
       })
     }
 
-    const verifyAdmin = async(req, res, next)=>{
-      const email = req.decoded.email;
-      const query ={email: email}
-      const user = await usersCollection.findOne(query)
-      const isAdmin = user?.role==='admin'
-      if(!isAdmin){res.status(403).send({message:'unauthorized access'})}
-      next();
-    }
+    // const verifyAdmin = async(req, res, next)=>{
+    //   const email = req.decoded.email;
+    //   const query ={email: email}
+    //   const user = await usersCollection.findOne(query)
+    //   const isAdmin = user?.role==='admin'
+    //   if(!isAdmin){res.status(403).send({message:'unauthorized access'})}
+    //   next();
+    // }
 
-    // check user admin or not?
-    app.get('/users/isadmin/:email',verifyToken,async(req, res)=>{
+    const verifyAdmin = async (req, res, next) => {
+      try {
+        const email = req.decoded.user.email;
+        const query = { email: email };
+        const user = await usersCollection.findOne(query);
+        
+        if (!user || user.role !== 'admin') {
+          return res.status(403).send({ message: 'Unauthorized access' });
+        }
+    
+        next();
+      } catch (error) {
+        console.error('Error in verifying admin:', error);
+        res.status(500).send({ message: 'Internal server error' });
+      }
+    };
+    
+    app.get('/users/isadmin/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
-      // console.log(email);
-
-      if(email!== req.decoded.email){
-        res.status(403).send({message:'unauthorized access'})
-      }
-      const query = {email: email}
-      const user = await usersCollection.findOne(query)
-      let admin = false;
-      if(user){
-        admin  = user?.role==="admin"
-      }
-      console.log(admin);
       
-      res.send({admin})
-    })
+      // Ensure the decoded email exists and matches the requested email
+      if (!req.decoded || req.decoded.user.email !== email) {
+        return res.status(403).send({ message: 'unauthorized access' });
+      }
+      
+      try {
+        const query = { email: email };
+        const user = await usersCollection.findOne(query);
+        
+        let admin = false;
+        if (user) {
+          admin = user.role === "admin";
+        }
+        res.send({ admin });
+      } catch (error) {
+        console.error("Error in fetching user:", error);
+        res.status(500).send({ message: "Internal server error" });
+      }
+    });
+    
+    // check user admin or not?
+    // app.get('/users/isadmin/:email',verifyToken,async(req, res)=>{
+    //   const email = req.params.email;
+    //   // console.log(email);
+
+    //   if(email!== req.decoded.email){
+    //     res.status(403).send({message:'unauthorized access'})
+    //   }
+    //   const query = {email: email}
+    //   const user = await usersCollection.findOne(query)
+    //   let admin = false;
+    //   if(user){
+    //     admin  = user?.role==="admin"
+    //   }
+    //   console.log(admin);
+      
+    //   res.send({admin})
+    // })
+  
+
+
 
   //users
    app.get('/users',verifyToken,verifyAdmin,async(req, res)=>{
