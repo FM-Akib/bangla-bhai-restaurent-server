@@ -33,6 +33,7 @@ async function run() {
     const reviewCollection = client.db('BanglaBhaiDB').collection("reviews");
     const cartCollection = client.db('BanglaBhaiDB').collection("carts");
     const usersCollection = client.db('BanglaBhaiDB').collection("users");
+    const paymentCollection = client.db('BanglaBhaiDB').collection("payments");
 
 
 
@@ -255,10 +256,7 @@ async function run() {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: "usd",
-        // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
-        automatic_payment_methods: {
-          enabled: true,
-        },
+        payment_method_types: ['card']
       });
     
       res.send({
@@ -266,6 +264,19 @@ async function run() {
       });
     });
 
+
+    // save payment data and clear users cart
+    app.post('/payments',async(req,res) => {
+      const payment  = req.body;
+      const paymentResult = await paymentCollection.insertOne(payment);
+
+      const query = {_id: {
+        $in: payment.cartIds.map(id=> new ObjectId(id))
+      }}
+
+      const deleteResult = await cartCollection.deleteMany(query);
+      res.send({paymentResult,deleteResult})
+    })
 
     
 
