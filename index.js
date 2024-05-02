@@ -265,6 +265,15 @@ async function run() {
     });
 
 
+
+    app.get('/payments/:email',async(req, res)=>{
+    
+      const query = {email: req.params.email};
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    
     // save payment data and clear users cart
     app.post('/payments',async(req,res) => {
       const payment  = req.body;
