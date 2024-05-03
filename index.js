@@ -287,6 +287,35 @@ async function run() {
       res.send({paymentResult,deleteResult})
     })
 
+
+    // admin Home statistics collection here
+    app.get('/admin-stats',async(req,res) => {
+      const users = await usersCollection.estimatedDocumentCount();
+      const menuItems = await menuCollection.estimatedDocumentCount();
+      const orders = await paymentCollection.estimatedDocumentCount();
+
+
+      const result = await paymentCollection.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalRevenue: {
+              $sum: '$price'
+            }
+          }
+        }
+      ]).toArray();
+
+    const revenue = result.length>0 ? result[0].totalRevenue :0;
+
+    res.send({
+      users,
+      menuItems,
+      orders,
+      revenue
+    })
+
+    })
     
 
     await client.db("admin").command({ ping: 1 });
